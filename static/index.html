@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analisador de Texto</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d0f;
+      --surface: #17171a;
+      --surface2: #1f1f24;
+      --border: #2e2e36;
+      --accent: #c8fb57;
+      --accent2: #57c8fb;
+      --accent3: #fb57a8;
+      --text: #eeeef0;
+      --muted: #7a7a8a;
+      --radius: 12px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      min-height: 100vh;
+      padding: 0 1rem 4rem;
+      overflow-x: hidden;
+    }
+
+    /* ── noise grain overlay ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 999; opacity: .6;
+    }
+
+    /* ── header ── */
+    header {
+      max-width: 860px; margin: 0 auto;
+      padding: 3rem 0 2rem;
+      display: flex; align-items: flex-end; gap: 1.2rem;
+    }
+
+    .logo-badge {
+      width: 52px; height: 52px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: grid; place-items: center;
+      font-size: 1.6rem;
+      flex-shrink: 0;
+      animation: badgePop .6s cubic-bezier(.34,1.56,.64,1) both;
+    }
+
+    @keyframes badgePop {
+      from { transform: scale(.4) rotate(-20deg); opacity: 0; }
+      to   { transform: scale(1) rotate(0deg);    opacity: 1; }
+    }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.8rem, 5vw, 2.8rem);
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -.03em;
+    }
+
+    h1 span { color: var(--accent); }
+
+    .tagline {
+      color: var(--muted);
+      font-size: .8rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    /* ── main layout ── */
+    main { max-width: 860px; margin: 0 auto; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .card-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: .75rem;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+
+    /* ── options grid ── */
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: .6rem;
+    }
+
+    .opt-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 8px;
+      padding: .6rem .9rem;
+      font-family: 'DM Mono', monospace;
+      font-size: .78rem;
+      cursor: pointer;
+      text-align: left;
+      transition: all .15s;
+      display: flex; align-items: center; gap: .5rem;
+    }
+
+    .opt-btn .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      flex-shrink: 0;
+      transition: all .15s;
+    }
+
+    .opt-btn.active {
+      border-color: var(--accent);
+      color: var(--text);
+    }
+
+    .opt-btn.active .dot {
+      background: var(--accent);
+      border-color: var(--accent);
+      box-shadow: 0 0 6px var(--accent);
+    }
+
+    .opt-btn:hover:not(.active) {
+      border-color: #444;
+      color: var(--text);
+    }
+
+    /* ── textarea ── */
+    textarea {
+      width: 100%;
+      min-height: 160px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: .9rem;
+      padding: 1rem;
+      resize: vertical;
+      outline: none;
+      transition: border-color .15s;
+      line-height: 1.6;
+    }
+
+    textarea:focus { border-color: var(--accent); }
+    textarea::placeholder { color: var(--muted); }
+
+    /* ── analyze button ── */
+    #btn-analisar {
+      width: 100%;
+      padding: .9rem;
+      background: var(--accent);
+      color: #0d0d0f;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+      cursor: pointer;
+      transition: transform .12s, box-shadow .12s;
+      margin-top: .8rem;
+    }
+
+    #btn-analisar:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(200,251,87,.25);
+    }
+
+    #btn-analisar:active { transform: translateY(0); }
+
+    #btn-analisar:disabled {
+      opacity: .5; cursor: not-allowed; transform: none; box-shadow: none;
+    }
+
+    /* ── results ── */
+    #results { display: none; }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1rem;
+    }
+
+    .result-block {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.2rem;
+      animation: slideIn .3s ease both;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-block h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: .8rem;
+    }
+
+    .stat-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: .3rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: .82rem;
+    }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-val { color: var(--accent); font-weight: 500; }
+
+    /* bar chart for top words */
+    .bar-item { margin-bottom: .55rem; }
+    .bar-label { font-size: .78rem; color: var(--text); margin-bottom: .2rem;
+                 display: flex; justify-content: space-between; }
+    .bar-track {
+      height: 6px; background: var(--border); border-radius: 99px; overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%; background: var(--accent); border-radius: 99px;
+      transition: width .6s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* biggest word spotlight */
+    .big-word {
+      font-family: 'Syne', sans-serif;
+      font-size: 2.4rem;
+      font-weight: 800;
+      color: var(--accent);
+      word-break: break-all;
+    }
+
+    /* chars heatmap */
+    .char-grid {
+      display: flex; flex-wrap: wrap; gap: .35rem;
+    }
+
+    .char-pill {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: .2rem .5rem;
+      font-size: .78rem;
+      display: flex; align-items: center; gap: .35rem;
+    }
+    .char-pill .ch { color: var(--accent2); }
+    .char-pill .cn { color: var(--muted); font-size: .72rem; }
+
+    /* ── definition panel ── */
+    #def-panel {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--accent2);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-top: 1rem;
+      animation: slideIn .3s ease both;
+    }
+
+    #def-panel .def-word {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.5rem; font-weight: 800; color: var(--accent2);
+    }
+    #def-panel .def-pos {
+      font-size: .75rem; color: var(--muted); margin: .3rem 0 .7rem;
+      text-transform: uppercase; letter-spacing: .1em;
+    }
+    #def-panel .def-text { font-size: .88rem; line-height: 1.6; color: var(--text); }
+
+    .def-close {
+      float: right;
+      background: none; border: none; color: var(--muted);
+      font-size: 1.2rem; cursor: pointer; line-height: 1;
+    }
+    .def-close:hover { color: var(--text); }
+
+    /* clickable words */
+    .clickable-word {
+      cursor: pointer;
+      border-bottom: 1px dashed var(--muted);
+      transition: color .12s, border-color .12s;
+    }
+    .clickable-word:hover { color: var(--accent2); border-color: var(--accent2); }
+
+    /* ── word count bubble ── */
+    #char-count {
+      float: right; font-size: .75rem; color: var(--muted);
+      margin-top: .4rem;
+    }
+
+    /* ── loading spinner ── */
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid #0d0d0f40;
+      border-top-color: #0d0d0f;
+      border-radius: 50%;
+      animation: spin .5s linear infinite;
+      vertical-align: middle; margin-right: .4rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── api note ── */
+    .api-note {
+      font-size: .72rem; color: var(--muted);
+      border-top: 1px solid var(--border);
+      padding-top: .8rem; margin-top: .8rem;
+    }
+    .api-note a { color: var(--accent2); text-decoration: none; }
+    .api-note a:hover { text-decoration: underline; }
+
+    footer {
+      max-width: 860px; margin: 3rem auto 0;
+      text-align: center;
+      font-size: .72rem; color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-badge">🧾</div>
+  <div>
+    <h1>Analisador de <span>Texto</span></h1>
+    <p class="tagline">Análise instantânea · Powered by Free Dictionary API</p>
+  </div>
+</header>
+
+<main>
+
+  <!-- Options -->
+  <div class="card">
+    <p class="card-title">// O que analisar?</p>
+    <div class="options-grid">
+      <button class="opt-btn active" data-op="caracteres">
+        <span class="dot"></span> Caracteres
+      </button>
+      <button class="opt-btn active" data-op="palavras">
+        <span class="dot"></span> Palavras
+      </button>
+      <button class="opt-btn active" data-op="top_palavras">
+        <span class="dot"></span> Top palavras
+      </button>
+      <button class="opt-btn active" data-op="estatisticas">
+        <span class="dot"></span> Estatísticas
+      </button>
+      <button class="opt-btn active" data-op="maior_palavra">
+        <span class="dot"></span> Maior palavra
+      </button>
+    </div>
+  </div>
+
+  <!-- Input -->
+  <div class="card">
+    <p class="card-title">// Seu texto</p>
+    <textarea id="texto-input" placeholder="Cole ou escreva o texto aqui…"></textarea>
+    <div id="char-count">0 palavras · 0 caracteres</div>
+    <button id="btn-analisar">Analisar →</button>
+  </div>
+
+  <!-- Results -->
+  <div id="results">
+    <div class="card">
+      <p class="card-title">// Resultados</p>
+      <div class="result-grid" id="result-grid"></div>
+    </div>
+
+    <!-- Definition panel -->
+    <div id="def-panel">
+      <button class="def-close" onclick="closeDefPanel()">✕</button>
+      <div class="def-word" id="def-word"></div>
+      <div class="def-pos" id="def-pos"></div>
+      <div class="def-text" id="def-text"></div>
+      <div class="api-note" id="def-fonte-note">
+        Clique em qualquer palavra nos resultados para ver sua definição.
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  Guilherme Ribeiro · Analisador de Texto v2.0 · <a href="https://github.com/guilhermerp16/Bootcamp-II" style="color:var(--muted)">GitHub</a>
+</footer>
+
+<script>
+  // ── toggle options ────────────────────────────────────────────────────────
+  document.querySelectorAll('.opt-btn').forEach(btn => {
+    btn.addEventListener('click', () => btn.classList.toggle('active'));
+  });
+
+  // ── char/word live counter ────────────────────────────────────────────────
+  const textarea = document.getElementById('texto-input');
+  const charCountEl = document.getElementById('char-count');
+
+  textarea.addEventListener('input', () => {
+    const t = textarea.value;
+    const words = t.trim() === '' ? 0 : t.trim().split(/\s+/).length;
+    charCountEl.textContent = `${words} palavra${words !== 1 ? 's' : ''} · ${t.length} caractere${t.length !== 1 ? 's' : ''}`;
+  });
+
+  // ── analyze ───────────────────────────────────────────────────────────────
+  document.getElementById('btn-analisar').addEventListener('click', async () => {
+    const texto = textarea.value.trim();
+    if (!texto) { textarea.focus(); return; }
+
+    const opcoes = [...document.querySelectorAll('.opt-btn.active')].map(b => b.dataset.op);
+    if (!opcoes.length) { alert('Selecione pelo menos uma opção.'); return; }
+
+    const btn = document.getElementById('btn-analisar');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Analisando…';
+
+    try {
+      const res = await fetch('/analisar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ texto, opcoes })
+      });
+      if (!res.ok) throw new Error((await res.json()).detail || 'Erro no servidor');
+      const data = await res.json();
+      renderResults(data);
+    } catch (e) {
+      alert('Erro: ' + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Analisar →';
+    }
+  });
+
+  // ── render results ────────────────────────────────────────────────────────
+  function renderResults(data) {
+    const grid = document.getElementById('result-grid');
+    grid.innerHTML = '';
+    closeDefPanel();
+
+    if (data.estatisticas) {
+      const b = block('📊 Estatísticas');
+      const { total_palavras, total_caracteres } = data.estatisticas;
+      b.innerHTML += `
+        <div class="stat-row"><span>Total de palavras</span><span class="stat-val">${total_palavras}</span></div>
+        <div class="stat-row"><span>Total de caracteres</span><span class="stat-val">${total_caracteres}</span></div>`;
+      grid.appendChild(b);
+    }
+
+    if (data.maior_palavra) {
+      const b = block('🔎 Maior palavra');
+      b.innerHTML += `<div class="big-word clickable-word" onclick="fetchDef(this.textContent)">${data.maior_palavra}</div>`;
+      grid.appendChild(b);
+    }
+
+    if (data.top_palavras?.length) {
+      const b = block('🔥 Top palavras');
+      const max = data.top_palavras[0][1];
+      data.top_palavras.forEach(([w, c]) => {
+        b.innerHTML += `
+          <div class="bar-item">
+            <div class="bar-label">
+              <span class="clickable-word" data-word="${w}" onclick="fetchDef(this.dataset.word)">${w}</span>
+              <span style="color:var(--muted)">${c}×</span>
+            </div>
+            <div class="bar-track"><div class="bar-fill" style="width:${(c/max*100).toFixed(1)}%"></div></div>
+          </div>`;
+      });
+      grid.appendChild(b);
+    }
+
+    if (data.palavras) {
+      const entries = Object.entries(data.palavras).sort((a,b) => b[1]-a[1]);
+      const b = block('🧠 Todas as palavras');
+      entries.forEach(([w, c]) => {
+        b.innerHTML += `<div class="stat-row">
+          <span class="clickable-word" data-word="${w}" onclick="fetchDef(this.dataset.word)">${w}</span>
+          <span class="stat-val">${c}</span></div>`;
+      });
+      grid.appendChild(b);
+    }
+
+    if (data.caracteres) {
+      const entries = Object.entries(data.caracteres).sort((a,b) => b[1]-a[1]);
+      const b = block('🧾 Caracteres');
+      b.innerHTML += `<div class="char-grid">` +
+        entries.map(([ch, c]) =>
+          `<span class="char-pill"><span class="ch">'${ch === ' ' ? '⎵' : ch}'</span><span class="cn">${c}</span></span>`
+        ).join('') +
+        `</div>`;
+      grid.appendChild(b);
+    }
+
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function block(title) {
+    const d = document.createElement('div');
+    d.className = 'result-block';
+    d.innerHTML = `<h3>${title}</h3>`;
+    return d;
+  }
+
+  // ── dictionary lookup ─────────────────────────────────────────────────────
+  const FONTE_LABELS = {
+    'Wiktionary (pt)': { label: 'Wiktionary', url: 'https://pt.wiktionary.org', flag: '🇧🇷' },
+    'Free Dictionary (en)': { label: 'Free Dictionary', url: 'https://dictionaryapi.dev', flag: '🇺🇸' },
+  };
+
+  async function fetchDef(word) {
+    if (!word) return;
+    const panel = document.getElementById('def-panel');
+    document.getElementById('def-word').textContent = word;
+    document.getElementById('def-pos').textContent = 'buscando definição…';
+    document.getElementById('def-text').textContent = '';
+    document.getElementById('def-fonte-note').innerHTML = '';
+    panel.style.display = 'block';
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    try {
+      const res = await fetch(`/definicao/${encodeURIComponent(word)}`);
+      if (!res.ok) throw new Error('not found');
+      const d = await res.json();
+      document.getElementById('def-pos').textContent = d.partOfSpeech || '—';
+      document.getElementById('def-text').textContent = d.definicao;
+
+      const fonte = FONTE_LABELS[d.fonte] || { label: d.fonte, url: '#', flag: '📖' };
+      document.getElementById('def-fonte-note').innerHTML =
+        `${fonte.flag} Definição via <a href="${fonte.url}" target="_blank">${fonte.label}</a>`;
+    } catch {
+      document.getElementById('def-pos').textContent = '—';
+      document.getElementById('def-text').textContent =
+        'Definição não encontrada para esta palavra.';
+      document.getElementById('def-fonte-note').innerHTML =
+        'Fontes consultadas: <a href="https://pt.wiktionary.org" target="_blank">Wiktionary pt-BR</a> · <a href="https://dictionaryapi.dev" target="_blank">Free Dictionary</a>';
+    }
+  }
+
+  function closeDefPanel() {
+    document.getElementById('def-panel').style.display = 'none';
+  }
+</script>
+</body>
+</html>
