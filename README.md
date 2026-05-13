@@ -6,7 +6,7 @@
 
 ## 📌 Descrição do problema
 
-Muitas pessoas, como estudantes, escritores iniciantes e profissionais, têm dificuldade em analisar rapidamente a qualidade de um texto — quantidade de palavras, frequência de termos e estrutura básica. Isso pode prejudicar estudos, produção de conteúdo e organização de informações.
+Muitas pessoas, como estudantes, escritores iniciantes e profissionais, têm dificuldade em analisar rapidamente a qualidade de um texto — quantidade de palavras, frequência de termos e estrutura básica. Isso pode prejudicar estudos, produção de conteúdo e organização de informações. 
 
 ## 💡 Proposta da solução
 
