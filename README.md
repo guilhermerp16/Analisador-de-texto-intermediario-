@@ -1,6 +1,6 @@
 # 🧾 Analisador de Texto
 
-> 🔗 **Acesse a aplicação:** [https://analisador-de-texto.onrender.com](https://analisador-de-texto.onrender.com) ← *substitua pelo seu link após o deploy*
+> 🔗 **Acesse a aplicação:** [[https://analisador-de-texto.onrender.com](https://analisador-de-texto-intermediario.onrender.com)]
 
 ---
 
