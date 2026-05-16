@@ -8,8 +8,6 @@
 
 Muitas pessoas, como estudantes, escritores iniciantes e profissionais, têm dificuldade em analisar rapidamente a qualidade de um texto — quantidade de palavras, frequência de termos e estrutura básica. Isso pode prejudicar estudos, produção de conteúdo e organização de informações. 
 
-![CI](https://github.com/guilhermerp16/Bootcamp-II/actions/workflows/ci.yml/badge.svg)
-
 ## 💡 Proposta da solução
 
 O Analisador de Texto é uma aplicação **web (GUI)** que permite analisar textos de forma rápida e prática, fornecendo métricas detalhadas e integração com o **Wiktionary pt-BR** para buscar definições das palavras analisadas em português e inglês.
