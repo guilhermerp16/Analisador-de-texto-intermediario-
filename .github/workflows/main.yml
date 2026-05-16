@@ -1,0 +1,28 @@
+name: main
+
+on:
+  push:
+    branches: [main]        # roda quando você faz push na branch main
+  pull_request:
+    branches: [main]        # roda quando você abre um pull request
+
+jobs:
+  test:
+    runs-on: ubuntu-latest  # usa uma máquina virtual Ubuntu
+
+    steps:
+      - uses: actions/checkout@v4          # baixa o código do repositório
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"           # instala o Python 3.13
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt  # instala as dependências
+
+      - name: Lint with flake8
+        run: flake8 app/ tests/ --max-line-length=120  # verifica estilo do código
+
+      - name: Run tests
+        run: pytest --tb=short -v          # roda todos os testes
