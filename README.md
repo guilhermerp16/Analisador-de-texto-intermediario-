@@ -1,12 +1,14 @@
 # 🧾 Analisador de Texto
 
 > 🔗 **Acesse a aplicação:** [[https://analisador-de-texto.onrender.com](https://analisador-de-texto-intermediario.onrender.com)]
-![CI](https://github.com/guilhermerp16/Bootcamp-II/actions/workflows/ci.yml/badge.svg)
+
 ---
 
 ## 📌 Descrição do problema
 
 Muitas pessoas, como estudantes, escritores iniciantes e profissionais, têm dificuldade em analisar rapidamente a qualidade de um texto — quantidade de palavras, frequência de termos e estrutura básica. Isso pode prejudicar estudos, produção de conteúdo e organização de informações. 
+
+![CI](https://github.com/guilhermerp16/Bootcamp-II/actions/workflows/ci.yml/badge.svg)
 
 ## 💡 Proposta da solução
 
