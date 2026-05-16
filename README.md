@@ -1,7 +1,7 @@
 # 🧾 Analisador de Texto
 
 > 🔗 **Acesse a aplicação:** [[https://analisador-de-texto.onrender.com](https://analisador-de-texto-intermediario.onrender.com)]
-
+![CI](https://github.com/guilhermerp16/Bootcamp-II/actions/workflows/ci.yml/badge.svg)
 ---
 
 ## 📌 Descrição do problema
