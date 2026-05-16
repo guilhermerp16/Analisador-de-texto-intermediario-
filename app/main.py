@@ -140,7 +140,6 @@ def _extrair_definicao_wikitext(wikitext: str, preferir_pt: bool = True) -> Opti
     return None
 
 
-
 HEADERS = {
     "User-Agent": "AnalisadorDeTexto/2.0 (https://github.com/guilhermerp16/Bootcamp-II; educational project)"
 }
@@ -317,7 +316,6 @@ async def debug(palavra: str):
             mw_raw = {"erro": str(e)}
 
         return {"wiktionary_rest": rest_raw, "mediawiki": mw_raw}
-
 
 
 @app.get("/definicao/{palavra:path}")
